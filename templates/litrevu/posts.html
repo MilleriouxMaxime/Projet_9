@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Mes Posts{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Mes Posts</h1>
+            
+            {% if not posts %}
+                <div class="alert alert-info">
+                    Vous n'avez pas encore créé de posts. Rendez-vous sur la page d'accueil pour créer un billet ou une critique !
+                </div>
+            {% else %}
+                {% for item in posts %}
+                    <div class="card mb-4" {% if item.content_type == 'TICKET' %}style="border: 2px solid #198754"{% else %}style="border: 2px solid #6f42c1"{% endif %}>
+                        {% if item.content_type == 'TICKET' %}
+                            <div class="card-body">
+                                <!-- Ticket -->
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <h5 class="card-title mb-0">{{ item.title }}</h5>
+                                        <small class="text-muted">
+                                            Vous avez demandé une critique
+                                        </small>
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ item.time_created|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <p class="card-text">{{ item.description }}</p>
+                                {% if item.image %}
+                                    <img src="{{ item.image.url }}" alt="Image du billet" class="img-fluid mb-3">
+                                {% endif %}
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'litrevu:edit_ticket' item.id %}" class="btn btn-outline-primary btn-sm">
+                                        Modifier
+                                    </a>
+                                    <a href="{% url 'litrevu:delete_ticket' item.id %}?next={% url 'litrevu:posts' %}" class="btn btn-outline-danger btn-sm">
+                                        Supprimer
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="card-body">
+                                <!-- Review -->
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <div class="d-flex align-items-center">
+                                            <h5 class="card-title mb-0">{{ item.headline }}</h5>
+                                            <div class="rating-stars ms-2">
+                                                {% for i in "12345"|make_list %}
+                                                    {% if forloop.counter <= item.rating %}
+                                                        <span>★</span>
+                                                    {% else %}
+                                                        <span class="empty">☆</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            Vous avez publié une critique
+                                        </small>
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ item.time_created|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <div class="mb-3">
+                                    <p class="card-text">{{ item.body }}</p>
+                                </div>
+                                <!-- Ticket being reviewed -->
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">
+                                            Critique du billet : {{ item.ticket.title }}
+                                        </h6>
+                                        <p class="card-text small">
+                                            Publié par {{ item.ticket.user.username }} le {{ item.ticket.time_created|date:"d/m/Y" }}
+                                        </p>
+                                        {% if item.ticket.image %}
+                                            <img src="{{ item.ticket.image.url }}" alt="Image du billet" class="img-fluid mb-2" style="max-height: 200px;">
+                                        {% endif %}
+                                        <p class="card-text">{{ item.ticket.description }}</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-3">
+                                    <a href="{% url 'litrevu:edit_review' item.id %}" class="btn btn-outline-primary btn-sm">
+                                        Modifier
+                                    </a>
+                                    <a href="{% url 'litrevu:delete_review' item.id %}?next={% url 'litrevu:posts' %}" class="btn btn-outline-danger btn-sm">
+                                        Supprimer
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

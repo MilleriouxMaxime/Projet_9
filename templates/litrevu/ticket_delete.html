@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer le billet{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">Supprimer le billet</h1>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Êtes-vous sûr de vouloir supprimer ce billet ?</h5>
+
+                    <!-- Ticket details -->
+                    <div class="mb-4">
+                        <h6>Votre billet :</h6>
+                        <p class="mb-1"><strong>{{ ticket.title }}</strong></p>
+                        <p>{{ ticket.description }}</p>
+                        {% if ticket.image %}
+                            <img src="{{ ticket.image.url }}" alt="Image du billet" class="img-fluid mb-3">
+                        {% endif %}
+                        <p class="text-muted">
+                            Publié le {{ ticket.time_created|date:"d/m/Y" }}
+                        </p>
+                    </div>
+
+                    <!-- Warning about associated reviews -->
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        La suppression de ce billet entraînera également la suppression de toutes les critiques associées.
+                    </div>
+
+                    <!-- Confirmation buttons -->
+                    <div class="mt-4 d-flex gap-2">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                            <button type="submit" class="btn btn-danger">Confirmer la suppression</button>
+                        </form>
+                        <a href="{{ next }}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Créer une critique{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">Créer une critique</h1>
+
+            {% if ticket %}
+                <!-- Display existing ticket -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ ticket.title }}</h5>
+                        <p class="card-text">{{ ticket.description }}</p>
+                        {% if ticket.image %}
+                            <img src="{{ ticket.image.url }}" alt="Image du billet" class="img-fluid mb-3">
+                        {% endif %}
+                        <p class="text-muted">
+                            Publié par {{ ticket.user.username }} le {{ ticket.time_created|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                
+                {% if not ticket %}
+                    <!-- Create new ticket form -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Créer un billet</h5>
+                            
+                            <div class="mb-3">
+                                <label for="{{ ticket_form.title.id_for_label }}" class="form-label">Titre</label>
+                                {{ ticket_form.title }}
+                                {% if ticket_form.title.errors %}
+                                    <div class="text-danger">
+                                        {{ ticket_form.title.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ ticket_form.description.id_for_label }}" class="form-label">Description</label>
+                                {{ ticket_form.description }}
+                                {% if ticket_form.description.errors %}
+                                    <div class="text-danger">
+                                        {{ ticket_form.description.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ ticket_form.image.id_for_label }}" class="form-label">Image</label>
+                                {{ ticket_form.image }}
+                                {% if ticket_form.image.errors %}
+                                    <div class="text-danger">
+                                        {{ ticket_form.image.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Review form -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Votre critique</h5>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.headline.id_for_label }}" class="form-label">Titre</label>
+                            {{ form.headline }}
+                            {% if form.headline.errors %}
+                                <div class="text-danger">
+                                    {{ form.headline.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.rating.id_for_label }}" class="form-label">Note</label>
+                            <div class="rating-group d-flex gap-4">
+                                {% for radio in form.rating %}
+                                    <div class="form-check">
+                                        {{ radio.tag }}
+                                        <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                            {{ radio.choice_label }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.rating.errors %}
+                                <div class="text-danger">
+                                    {{ form.rating.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.body.id_for_label }}" class="form-label">Commentaire</label>
+                            {{ form.body }}
+                            {% if form.body.errors %}
+                                <div class="text-danger">
+                                    {{ form.body.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Publier</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

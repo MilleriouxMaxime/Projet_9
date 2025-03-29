@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Flux{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Votre Flux</h1>
+            <div class="d-flex gap-2 mb-4">
+                <a href="{% url 'litrevu:create_ticket' %}" class="btn btn-primary">Demander une critique</a>
+                <a href="{% url 'litrevu:create_review' %}" class="btn btn-primary">Créer une critique</a>
+            </div>
+            
+            {% if not feed %}
+                <div class="alert alert-info">
+                    Votre flux est vide. Commencez par suivre d'autres utilisateurs ou créer un billet !
+                </div>
+            {% else %}
+                {% for item in feed %}
+                    <div class="card mb-4" {% if item.content_type == 'TICKET' %}style="border: 2px solid #198754"{% else %}style="border: 2px solid #6f42c1"{% endif %}>
+                        {% if item.content_type == 'TICKET' %}
+                            <div class="card-body">
+                                <!-- Ticket -->
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <h5 class="card-title mb-0">{{ item.title }}</h5>
+                                        <small class="text-muted">
+                                            {% if item.user == user %}Vous avez demandé une critique{% else %}{{ item.user.username }} a demandé une critique{% endif %}
+                                        </small>
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ item.time_created|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <p class="card-text">{{ item.description }}</p>
+                                {% if item.image %}
+                                    <img src="{{ item.image.url }}" alt="Image du billet" class="img-fluid mb-3">
+                                {% endif %}
+                                <div class="d-flex justify-content-end">
+                                    {% if not item.has_user_reviewed %}
+                                        <a href="{% url 'litrevu:create_review_for_ticket' item.id %}" class="btn btn-outline-primary btn-sm">
+                                            Créer une critique
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="card-body">
+                                <!-- Review -->
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <div class="d-flex align-items-center">
+                                            <h5 class="card-title mb-0">{{ item.headline }}</h5>
+                                            <div class="rating-stars ms-2">
+                                                {% for i in "12345"|make_list %}
+                                                    {% if forloop.counter <= item.rating %}
+                                                        <span>★</span>
+                                                    {% else %}
+                                                        <span class="empty">☆</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            {% if item.user == user %}Vous avez publié une critique{% else %}{{ item.user.username }} a publié une critique{% endif %}
+                                        </small>
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ item.time_created|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <div class="mb-3">
+                                    <p class="card-text">{{ item.body }}</p>
+                                </div>
+                                <!-- Ticket being reviewed -->
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">
+                                            Critique du billet : {{ item.ticket.title }}
+                                        </h6>
+                                        <p class="card-text small">
+                                            Publié par {% if item.ticket.user == user %}Vous{% else %}{{ item.ticket.user.username }}{% endif %} le {{ item.ticket.time_created|date:"d/m/Y" }}
+                                        </p>
+                                        {% if item.ticket.image %}
+                                            <img src="{{ item.ticket.image.url }}" alt="Image du billet" class="img-fluid mb-2" style="max-height: 200px;">
+                                        {% endif %}
+                                        <p class="card-text">{{ item.ticket.description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

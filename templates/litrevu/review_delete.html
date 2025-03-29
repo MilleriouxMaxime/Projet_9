@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer la critique{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">Supprimer la critique</h1>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Êtes-vous sûr de vouloir supprimer cette critique ?</h5>
+
+                    <!-- Review details -->
+                    <div class="mb-4">
+                        <h6>Votre critique :</h6>
+                        <p class="mb-1"><strong>{{ review.headline }}</strong></p>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2">Note :</div>
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= review.rating %}
+                                    <span class="text-warning">★</span>
+                                {% else %}
+                                    <span class="text-muted">☆</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p>{{ review.body }}</p>
+                    </div>
+
+                    <!-- Ticket details -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                Critique du billet : {{ ticket.title }}
+                            </h6>
+                            <p class="card-text">{{ ticket.description }}</p>
+                            {% if ticket.image %}
+                                <img src="{{ ticket.image.url }}" alt="Image du billet" class="img-fluid mb-2" style="max-height: 200px;">
+                            {% endif %}
+                            <p class="card-text small">
+                                Publié par {{ ticket.user.username }} le {{ ticket.time_created|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Confirmation buttons -->
+                    <div class="mt-4 d-flex gap-2">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                            <button type="submit" class="btn btn-danger">Confirmer la suppression</button>
+                        </form>
+                        <a href="{{ next }}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

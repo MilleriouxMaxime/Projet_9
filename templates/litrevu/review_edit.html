@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier la critique{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">Modifier la critique</h1>
+
+            <!-- Display ticket being reviewed -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ ticket.title }}</h5>
+                    <p class="card-text">{{ ticket.description }}</p>
+                    {% if ticket.image %}
+                        <img src="{{ ticket.image.url }}" alt="Image du billet" class="img-fluid mb-3">
+                    {% endif %}
+                    <p class="text-muted">
+                        Publié par {{ ticket.user.username }} le {{ ticket.time_created|date:"d/m/Y" }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Review edit form -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.headline.id_for_label }}" class="form-label">Titre</label>
+                            {{ form.headline }}
+                            {% if form.headline.errors %}
+                                <div class="text-danger">
+                                    {{ form.headline.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.rating.id_for_label }}" class="form-label">Note</label>
+                            <div class="rating-group d-flex gap-4">
+                                {% for radio in form.rating %}
+                                    <div class="form-check">
+                                        {{ radio.tag }}
+                                        <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                            {{ radio.choice_label }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.rating.errors %}
+                                <div class="text-danger">
+                                    {{ form.rating.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.body.id_for_label }}" class="form-label">Commentaire</label>
+                            {{ form.body }}
+                            {% if form.body.errors %}
+                                <div class="text-danger">
+                                    {{ form.body.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                            <a href="{% url 'litrevu:home' %}" class="btn btn-outline-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
