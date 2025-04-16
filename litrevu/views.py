@@ -1,23 +1,21 @@
 from django.contrib.auth import login, logout, get_user_model
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
-from django.utils.decorators import method_decorator
 from django.views import View
 from django.db import IntegrityError, transaction
 from django.db.models import Q, CharField, Value, Exists, OuterRef
 from itertools import chain
-from django.db.models.functions import Concat
 from django.http import HttpResponseForbidden
 
 from .forms import (
     SignUpForm, LoginForm, UserFollowForm,
     TicketForm, ReviewForm
 )
-from .models import UserFollows, Ticket, Review
+from .models import UserFollows, Ticket, Review, UserBlocks
 
 User = get_user_model()
 
@@ -117,6 +115,8 @@ class CustomLogoutView(View):
 def follows_list(request):
     following = request.user.following.select_related('followed_user').order_by('-time_created')
     followers = request.user.followed_by.select_related('user').order_by('-time_created')
+    blocked_users = request.user.blocking.select_related('blocked_user').order_by('-time_created')
+    blocked_by = request.user.blocked_by.select_related('user').order_by('-time_created')
     form = UserFollowForm(request=request)
     
     if request.method == 'POST':
@@ -140,6 +140,8 @@ def follows_list(request):
         'form': form,
         'following': following,
         'followers': followers,
+        'blocked_users': blocked_users,
+        'blocked_by': blocked_by
     })
 
 @login_required
@@ -319,6 +321,44 @@ def delete_ticket(request, ticket_id):
         'ticket': ticket,
         'next': request.GET.get('next', reverse_lazy('litrevu:home'))
     })
+
+@login_required
+def block_user(request, user_id):
+    user_to_block = get_object_or_404(User, id=user_id)
+    
+    # Check if trying to block self
+    if user_to_block == request.user:
+        messages.error(request, 'Vous ne pouvez pas vous bloquer vous-même.')
+        return redirect('litrevu:follows')
+    
+    try:
+        # Create the block
+        UserBlocks.objects.create(user=request.user, blocked_user=user_to_block)
+        
+        # Remove any existing follow relationships in both directions
+        UserFollows.objects.filter(
+            Q(user=request.user, followed_user=user_to_block) |
+            Q(user=user_to_block, followed_user=request.user)
+        ).delete()
+        
+        messages.success(request, f'Vous avez bloqué {user_to_block.username}.')
+    except IntegrityError:
+        messages.error(request, 'Vous bloquez déjà cet utilisateur.')
+    
+    return redirect('litrevu:follows')
+
+@login_required
+def unblock_user(request, user_id):
+    user_to_unblock = get_object_or_404(User, id=user_id)
+    
+    try:
+        block = UserBlocks.objects.get(user=request.user, blocked_user=user_to_unblock)
+        block.delete()
+        messages.success(request, f'Vous avez débloqué {user_to_unblock.username}.')
+    except UserBlocks.DoesNotExist:
+        messages.error(request, 'Vous ne bloquez pas cet utilisateur.')
+    
+    return redirect('litrevu:follows')
 
 @login_required
 def posts(request):

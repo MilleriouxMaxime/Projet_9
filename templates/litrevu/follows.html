@@ -61,17 +61,25 @@
             </div>
 
             <!-- Followers List -->
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">Abonnés</h5>
                     {% if followers %}
                         <div class="list-group">
                             {% for follower in followers %}
-                                <div class="list-group-item">
-                                    <strong>{{ follower.user.username }}</strong>
-                                    <small class="text-muted">
-                                        Vous suit depuis le {{ follower.time_created|date:"d/m/Y" }}
-                                    </small>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ follower.user.username }}</strong>
+                                        <small class="text-muted">
+                                            Vous suit depuis le {{ follower.time_created|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                    <form method="post" action="{% url 'litrevu:block' follower.user.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-warning btn-sm">
+                                            Bloquer
+                                        </button>
+                                    </form>
                                 </div>
                             {% endfor %}
                         </div>
@@ -80,7 +88,36 @@
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Blocked Users List -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Utilisateurs bloqués</h5>
+                    {% if blocked_users %}
+                        <div class="list-group">
+                            {% for block in blocked_users %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ block.blocked_user.username }}</strong>
+                                        <small class="text-muted">
+                                            Bloqué depuis le {{ block.time_created|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                    <form method="post" action="{% url 'litrevu:unblock' block.blocked_user.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-secondary btn-sm">
+                                            Débloquer
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Vous n'avez bloqué aucun utilisateur.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

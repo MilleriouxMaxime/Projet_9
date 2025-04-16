@@ -53,6 +53,14 @@ class UserFollowForm(forms.Form):
             ).exists():
                 raise forms.ValidationError(f"Vous suivez déjà {username}.")
             
+            # Check if the user has blocked the user they're trying to follow
+            if self.request and self.request.user.blocking.filter(blocked_user=user_to_follow).exists():
+                raise forms.ValidationError("Vous ne pouvez pas suivre un utilisateur que vous avez bloqué.")
+            
+            # Check if the target user has blocked the current user
+            if self.request and user_to_follow.blocking.filter(blocked_user=self.request.user).exists():
+                raise forms.ValidationError("Vous ne pouvez pas suivre cet utilisateur car il vous a bloqué.")
+            
             return username
         except User.DoesNotExist:
             raise forms.ValidationError(f"L'utilisateur {username} n'existe pas.")

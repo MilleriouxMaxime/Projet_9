@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class User(AbstractUser):
@@ -83,6 +84,37 @@ class Review(models.Model):
         return f"{self.headline}"
 
 
+class UserBlocks(models.Model):
+    user = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='blocking',
+        verbose_name='Utilisateur')
+    blocked_user = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='blocked_by',
+        verbose_name='Utilisateur bloqué')
+    time_created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Date de création')
+
+    class Meta:
+        ordering = ['-time_created']
+        verbose_name = 'Blocage'
+        verbose_name_plural = 'Blocages'
+        unique_together = ('user', 'blocked_user',)
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('blocked_user')),
+                name='cannot_block_self'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} a bloqué {self.blocked_user}"
+
+
 class UserFollows(models.Model):
     user = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
@@ -109,6 +141,18 @@ class UserFollows(models.Model):
                 name='cannot_follow_self'
             )
         ]
+
+    def clean(self):
+        # Check if the user is blocked by the followed_user
+        if UserBlocks.objects.filter(user=self.followed_user, blocked_user=self.user).exists():
+            raise ValidationError("Vous ne pouvez pas suivre un utilisateur qui vous a bloqué.")
+        # Check if the user has blocked the followed_user
+        if UserBlocks.objects.filter(user=self.user, blocked_user=self.followed_user).exists():
+            raise ValidationError("Vous ne pouvez pas suivre un utilisateur que vous avez bloqué.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user} suit {self.followed_user}"

@@ -15,9 +15,11 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('posts/', views.posts, name='posts'),
     
-    # Following
+    # Following and Blocking
     path('follows/', views.follows_list, name='follows'),
     path('unfollow/<int:user_id>/', views.unfollow_user, name='unfollow'),
+    path('block/<int:user_id>/', views.block_user, name='block'),
+    path('unblock/<int:user_id>/', views.unblock_user, name='unblock'),
 
     # Tickets and Reviews
     path('ticket/create/', views.create_ticket, name='create_ticket'),
