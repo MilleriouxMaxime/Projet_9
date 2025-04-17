@@ -3,6 +3,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
+from PIL import Image
+from io import BytesIO
+from django.core.files import File
 
 
 class User(AbstractUser):
@@ -27,7 +30,8 @@ class Ticket(models.Model):
         null=True,
         blank=True,
         upload_to='tickets/',
-        verbose_name='Image')
+        verbose_name='Image',
+        help_text='Image maximum size is 800x800 pixels')
     time_created = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Date de création')
@@ -39,6 +43,32 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            # Open image
+            img = Image.open(self.image)
+            
+            # Convert to RGB if necessary
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Set maximum size
+            max_size = (400, 400)
+            
+            # Resize if larger than maximum size while maintaining aspect ratio
+            if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
+                img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                
+            # Save the processed image
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=85)
+            output.seek(0)
+            
+            # Replace the image field with processed image
+            self.image = File(output, name=self.image.name)
+        
+        super().save(*args, **kwargs)
 
 
 class Review(models.Model):
