@@ -7,15 +7,6 @@ from django.core.exceptions import ValidationError
 
 class User(AbstractUser):
     """Custom user model for LITRevu."""
-    
-    bio = models.TextField(max_length=500, blank=True, verbose_name='Biographie')
-    profile_photo = models.ImageField(
-        upload_to='profile_photos/',
-        null=True,
-        blank=True,
-        verbose_name='Photo de profil'
-    )
-
     class Meta:
         verbose_name = 'Utilisateur'
         verbose_name_plural = 'Utilisateurs'
