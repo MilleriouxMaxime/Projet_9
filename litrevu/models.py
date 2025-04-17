@@ -15,10 +15,20 @@ class User(AbstractUser):
         verbose_name_plural = 'Utilisateurs'
 
     def __str__(self):
+        """Return the username as string representation.
+
+        Returns:
+            str: The username of the user
+        """
         return self.username
 
 
 class Ticket(models.Model):
+    """Model representing a ticket (post) in the application.
+
+    A ticket can have an optional image that will be automatically resized.
+    Users can create tickets to request reviews or share content.
+    """
     title = models.CharField(max_length=128, verbose_name='Titre')
     description = models.TextField(max_length=2048, blank=True, verbose_name='Description')
     user = models.ForeignKey(
@@ -42,6 +52,11 @@ class Ticket(models.Model):
         verbose_name_plural = 'Billets'
 
     def __str__(self):
+        """Return the ticket title as string representation.
+
+        Returns:
+            str: The title of the ticket
+        """
         return f"{self.title}"
 
     def save(self, *args, **kwargs):
@@ -72,6 +87,11 @@ class Ticket(models.Model):
 
 
 class Review(models.Model):
+    """Model representing a review in the application.
+
+    A review is always associated with a ticket and includes a rating (0-5),
+    a headline, and an optional detailed body text.
+    """
     ticket = models.ForeignKey(
         to=Ticket,
         on_delete=models.CASCADE,
@@ -102,10 +122,20 @@ class Review(models.Model):
         verbose_name_plural = 'Critiques'
 
     def __str__(self):
+        """Return the review headline as string representation.
+
+        Returns:
+            str: The headline of the review
+        """
         return f"{self.headline}"
 
 
 class UserBlocks(models.Model):
+    """Model representing user blocking relationships.
+
+    Tracks which users have blocked other users. A user cannot block themselves,
+    and a user can only block another user once (enforced by unique_together).
+    """
     user = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -133,10 +163,21 @@ class UserBlocks(models.Model):
         ]
 
     def __str__(self):
+        """Return a string describing the block relationship.
+
+        Returns:
+            str: Description of who blocked whom
+        """
         return f"{self.user} a bloqué {self.blocked_user}"
 
 
 class UserFollows(models.Model):
+    """Model representing user follow relationships.
+
+    Tracks which users follow other users. A user cannot follow themselves,
+    and a user can only follow another user once (enforced by unique_together).
+    Users cannot follow users who have blocked them or whom they have blocked.
+    """
     user = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -164,6 +205,14 @@ class UserFollows(models.Model):
         ]
 
     def clean(self):
+        """Validate the follow relationship.
+
+        Checks if either user has blocked the other, preventing the follow
+        relationship if blocks exist in either direction.
+
+        Raises:
+            ValidationError: If there are blocking relationships preventing the follow
+        """
         # Check if the user is blocked by the followed_user
         if UserBlocks.objects.filter(user=self.followed_user, blocked_user=self.user).exists():
             raise ValidationError("Vous ne pouvez pas suivre un utilisateur qui vous a bloqué.")
@@ -172,8 +221,24 @@ class UserFollows(models.Model):
             raise ValidationError("Vous ne pouvez pas suivre un utilisateur que vous avez bloqué.")
 
     def save(self, *args, **kwargs):
+        """Override save to ensure validation is performed.
+
+        Calls clean() before saving to enforce blocking relationship rules.
+
+        Args:
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments
+
+        Raises:
+            ValidationError: If validation fails
+        """
         self.clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
+        """Return a string describing the follow relationship.
+
+        Returns:
+            str: Description of who follows whom
+        """
         return f"{self.user} suit {self.followed_user}"

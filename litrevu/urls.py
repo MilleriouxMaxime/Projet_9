@@ -1,3 +1,14 @@
+"""URL configuration for the LITRevu application.
+
+Defines all URL patterns for:
+- Authentication (login, signup, logout)
+- Main pages (home, posts)
+- User relationships (following and blocking)
+- Content management (tickets and reviews)
+
+All URLs are namespaced under 'litrevu'.
+"""
+
 from django.urls import path
 from django.views.generic import RedirectView
 from . import views

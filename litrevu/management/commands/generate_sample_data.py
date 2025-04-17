@@ -1,3 +1,14 @@
+"""Management command to generate sample data for testing the LITRevu application.
+
+Generates:
+- Test users with predefined usernames
+- Follow relationships between users
+- Sample book tickets with realistic French literature content
+- Reviews on tickets with varied ratings and comments
+
+All data is created with realistic timestamps to simulate actual usage.
+"""
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from litrevu.models import Ticket, Review, UserFollows
@@ -59,9 +70,35 @@ SAMPLE_REVIEWS = [
 ]
 
 class Command(BaseCommand):
+    """Django management command to populate the database with sample data.
+
+    This command will:
+    1. Clean existing non-superuser data
+    2. Create test users (alice, bob, charlie, david)
+    3. Create random follow relationships
+    4. Create tickets for French literature books
+    5. Generate reviews with varied ratings
+    
+    All created data uses realistic French content and timestamps.
+    """
     help = 'Generates sample data for testing'
 
     def handle(self, *args, **kwargs):
+        """Execute the command to generate sample data.
+
+        The data generation process follows these steps:
+        1. Clean existing data (users, tickets, reviews, follows)
+        2. Create test users with predefined usernames
+        3. Create random follow relationships between users
+        4. Create tickets for books with realistic timestamps
+        5. Generate reviews for ~75% of tickets
+
+        Args:
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments
+
+        Outputs progress messages to stdout during execution.
+        """
         # Clean existing data
         self.stdout.write('Cleaning existing data...')
         Review.objects.all().delete()

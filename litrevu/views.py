@@ -23,6 +23,19 @@ User = get_user_model()
 
 @login_required
 def home(request):
+    """Display the home feed for the logged-in user.
+
+    Shows tickets and reviews from:
+    - The user themselves
+    - Users they follow
+    - Reviews on the user's tickets (even if reviewer is not followed)
+
+    Args:
+        request: The HTTP request object
+
+    Returns:
+        Rendered home page with combined feed of tickets and reviews
+    """
     # Get users that the current user follows
     followed_users = User.objects.filter(
         followed_by__user=request.user
@@ -68,16 +81,41 @@ def home(request):
 
 
 class SignUpView(CreateView):
+    """Handle user registration.
+
+    Extends Django's CreateView to provide user signup functionality.
+    Redirects authenticated users away from signup page.
+    """
     form_class = SignUpForm
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('litrevu:home')
 
     def dispatch(self, request, *args, **kwargs):
+        """Override dispatch to redirect authenticated users.
+
+        Args:
+            request: The HTTP request
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments
+
+        Returns:
+            Redirect to home for authenticated users, otherwise normal dispatch
+        """
         if request.user.is_authenticated:
             return redirect('litrevu:home')
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
+        """Handle valid form submission.
+
+        Logs in the user and shows success message after successful registration.
+
+        Args:
+            form: The valid signup form
+
+        Returns:
+            HTTP response after successful registration
+        """
         response = super().form_valid(form)
         login(self.request, self.object)
         messages.success(self.request, 'Votre compte a été créé avec succès!')
@@ -85,27 +123,70 @@ class SignUpView(CreateView):
 
 
 class CustomLoginView(LoginView):
+    """Custom login view with custom form and success messages.
+
+    Extends Django's LoginView to provide custom login functionality.
+    """
     form_class = LoginForm
     template_name = 'registration/login.html'
     redirect_authenticated_user = True
 
     def form_invalid(self, form):
+        """Handle invalid login attempts.
+
+        Shows error message for invalid credentials.
+
+        Args:
+            form: The invalid login form
+
+        Returns:
+            Response with error message
+        """
         messages.error(self.request, 'Identifiants invalides. Veuillez réessayer.')
         return super().form_invalid(form)
 
     def get_success_url(self):
+        """Get URL to redirect to after successful login.
+
+        Returns:
+            URL to home page with success message
+        """
         messages.success(self.request, 'Connexion réussie!')
         return reverse_lazy('litrevu:home')
 
 
 class CustomLogoutView(View):
+    """Custom logout view supporting both GET and POST requests.
+
+    Handles user logout and redirects to login page with message.
+    """
     def get(self, request, *args, **kwargs):
+        """Handle GET request for logout.
+
+        Args:
+            request: The HTTP request
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments
+
+        Returns:
+            Redirect to login page
+        """
         if request.user.is_authenticated:
             messages.info(request, 'Vous avez été déconnecté.')
             logout(request)
         return redirect('litrevu:login')
 
     def post(self, request, *args, **kwargs):
+        """Handle POST request for logout.
+
+        Args:
+            request: The HTTP request
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments
+
+        Returns:
+            Redirect to login page
+        """
         if request.user.is_authenticated:
             messages.info(request, 'Vous avez été déconnecté.')
             logout(request)
@@ -113,6 +194,20 @@ class CustomLogoutView(View):
 
 @login_required
 def follows_list(request):
+    """Display the user's following/followers list and blocked users.
+
+    Shows lists of:
+    - Users being followed
+    - Users following the current user
+    - Users blocked by current user
+    - Users who have blocked the current user
+
+    Args:
+        request: The HTTP request
+
+    Returns:
+        Rendered follows page with all relationship lists
+    """
     following = request.user.following.select_related('followed_user').order_by('-time_created')
     followers = request.user.followed_by.select_related('user').order_by('-time_created')
     blocked_users = request.user.blocking.select_related('blocked_user').order_by('-time_created')
@@ -146,6 +241,15 @@ def follows_list(request):
 
 @login_required
 def unfollow_user(request, user_id):
+    """Remove a follow relationship.
+
+    Args:
+        request: The HTTP request
+        user_id: ID of the user to unfollow
+
+    Returns:
+        Redirect to follows page with success/error message
+    """
     if request.method == 'POST':
         follow = get_object_or_404(
             UserFollows,
@@ -159,6 +263,16 @@ def unfollow_user(request, user_id):
 
 @login_required
 def create_ticket(request):
+    """Create a new ticket.
+
+    Handles both GET (form display) and POST (form submission) requests.
+
+    Args:
+        request: The HTTP request
+
+    Returns:
+        Rendered create ticket form or redirect after successful creation
+    """
     if request.method == 'POST':
         form = TicketForm(request.POST, request.FILES)
         if form.is_valid():
@@ -176,6 +290,19 @@ def create_ticket(request):
 
 @login_required
 def create_review(request, ticket_id=None):
+    """Create a new review, optionally in response to a ticket.
+
+    Can create a review for:
+    - An existing ticket (ticket_id provided)
+    - A new ticket (creates ticket and review together)
+
+    Args:
+        request: The HTTP request
+        ticket_id: Optional ID of existing ticket to review
+
+    Returns:
+        Rendered review form or redirect after successful creation
+    """
     ticket = None
     ticket_form = None
     
@@ -238,6 +365,19 @@ def create_review(request, ticket_id=None):
 
 @login_required
 def edit_review(request, review_id):
+    """Edit an existing review.
+
+    Only allows editing by the review's author.
+
+    Args:
+        request: The HTTP request
+        review_id: ID of the review to edit
+
+    Returns:
+        Rendered edit form or redirect after successful update
+    Raises:
+        HttpResponseForbidden: If user is not the review author
+    """
     review = get_object_or_404(Review, id=review_id)
     
     # Check if the user is the owner of the review
@@ -261,6 +401,19 @@ def edit_review(request, review_id):
 
 @login_required
 def delete_review(request, review_id):
+    """Delete an existing review.
+
+    Only allows deletion by the review's author.
+
+    Args:
+        request: The HTTP request
+        review_id: ID of the review to delete
+
+    Returns:
+        Rendered confirmation page or redirect after deletion
+    Raises:
+        HttpResponseForbidden: If user is not the review author
+    """
     review = get_object_or_404(Review, id=review_id)
     
     # Check if the user is the owner of the review
@@ -282,6 +435,19 @@ def delete_review(request, review_id):
 
 @login_required
 def edit_ticket(request, ticket_id):
+    """Edit an existing ticket.
+
+    Only allows editing by the ticket's author.
+
+    Args:
+        request: The HTTP request
+        ticket_id: ID of the ticket to edit
+
+    Returns:
+        Rendered edit form or redirect after successful update
+    Raises:
+        HttpResponseForbidden: If user is not the ticket author
+    """
     ticket = get_object_or_404(Ticket, id=ticket_id)
     
     # Check if the user is the owner of the ticket
@@ -304,6 +470,19 @@ def edit_ticket(request, ticket_id):
 
 @login_required
 def delete_ticket(request, ticket_id):
+    """Delete an existing ticket.
+
+    Only allows deletion by the ticket's author.
+
+    Args:
+        request: The HTTP request
+        ticket_id: ID of the ticket to delete
+
+    Returns:
+        Rendered confirmation page or redirect after deletion
+    Raises:
+        HttpResponseForbidden: If user is not the ticket author
+    """
     ticket = get_object_or_404(Ticket, id=ticket_id)
     
     # Check if the user is the owner of the ticket
@@ -324,6 +503,18 @@ def delete_ticket(request, ticket_id):
 
 @login_required
 def block_user(request, user_id):
+    """Block another user.
+
+    Creates a block relationship and removes any existing follow relationships
+    in both directions.
+
+    Args:
+        request: The HTTP request
+        user_id: ID of the user to block
+
+    Returns:
+        Redirect to follows page with success/error message
+    """
     user_to_block = get_object_or_404(User, id=user_id)
     
     # Check if trying to block self
@@ -349,6 +540,15 @@ def block_user(request, user_id):
 
 @login_required
 def unblock_user(request, user_id):
+    """Remove a block on another user.
+
+    Args:
+        request: The HTTP request
+        user_id: ID of the user to unblock
+
+    Returns:
+        Redirect to follows page with success/error message
+    """
     user_to_unblock = get_object_or_404(User, id=user_id)
     
     try:
@@ -362,6 +562,16 @@ def unblock_user(request, user_id):
 
 @login_required
 def posts(request):
+    """Display all posts (tickets and reviews) created by the user.
+
+    Combines and sorts both tickets and reviews by creation time.
+
+    Args:
+        request: The HTTP request
+
+    Returns:
+        Rendered posts page with combined list of user's content
+    """
     # Get all tickets created by the user
     tickets = Ticket.objects.filter(
         user=request.user
