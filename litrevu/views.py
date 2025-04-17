@@ -183,7 +183,7 @@ def create_review(request, ticket_id=None):
         ticket = get_object_or_404(Ticket, id=ticket_id)
         # Check if the user has already reviewed this ticket
         if Review.objects.filter(ticket=ticket, user=request.user).exists():
-            messages.error(request, 'You have already reviewed this ticket.')
+            messages.error(request, 'Vous avez déjà critiqué ce billet.')
             return redirect('litrevu:home')
     
     if request.method == 'POST':
@@ -196,7 +196,7 @@ def create_review(request, ticket_id=None):
                 review.user = request.user
                 review.ticket = ticket
                 review.save()
-                messages.success(request, 'Your review has been created successfully!')
+                messages.success(request, 'Votre critique a été créée avec succès!')
                 return redirect('litrevu:home')
         else:
             # Creating both ticket and review
@@ -242,7 +242,7 @@ def edit_review(request, review_id):
     
     # Check if the user is the owner of the review
     if review.user != request.user:
-        return HttpResponseForbidden("You don't have permission to edit this review.")
+        return HttpResponseForbidden("Vous n'avez pas la permission de modifier cette critique.")
     
     if request.method == 'POST':
         form = ReviewForm(request.POST, instance=review)
@@ -265,7 +265,7 @@ def delete_review(request, review_id):
     
     # Check if the user is the owner of the review
     if review.user != request.user:
-        return HttpResponseForbidden("You don't have permission to delete this review.")
+        return HttpResponseForbidden("Vous n'avez pas la permission de supprimer cette critique.")
     
     if request.method == 'POST':
         review.delete()
@@ -286,7 +286,7 @@ def edit_ticket(request, ticket_id):
     
     # Check if the user is the owner of the ticket
     if ticket.user != request.user:
-        return HttpResponseForbidden("You don't have permission to edit this ticket.")
+        return HttpResponseForbidden("Vous n'avez pas la permission de modifier ce billet.")
     
     if request.method == 'POST':
         form = TicketForm(request.POST, request.FILES, instance=ticket)
@@ -308,7 +308,7 @@ def delete_ticket(request, ticket_id):
     
     # Check if the user is the owner of the ticket
     if ticket.user != request.user:
-        return HttpResponseForbidden("You don't have permission to delete this ticket.")
+        return HttpResponseForbidden("Vous n'avez pas la permission de supprimer ce billet.")
     
     if request.method == 'POST':
         ticket.delete()
