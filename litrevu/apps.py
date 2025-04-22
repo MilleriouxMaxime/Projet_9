@@ -7,5 +7,6 @@ class LitrevuConfig(AppConfig):
     Defines basic Django application settings including the app name
     and database auto field type.
     """
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'litrevu'
+
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "litrevu"

@@ -6,16 +6,16 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('litrevu', '0002_userblocks_userblocks_cannot_block_self_and_more'),
+        ("litrevu", "0002_userblocks_userblocks_cannot_block_self_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='user',
-            name='bio',
+            model_name="user",
+            name="bio",
         ),
         migrations.RemoveField(
-            model_name='user',
-            name='profile_photo',
+            model_name="user",
+            name="profile_photo",
         ),
     ]

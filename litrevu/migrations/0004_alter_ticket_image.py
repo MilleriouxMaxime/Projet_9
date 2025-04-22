@@ -6,13 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('litrevu', '0003_remove_user_bio_remove_user_profile_photo'),
+        ("litrevu", "0003_remove_user_bio_remove_user_profile_photo"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='ticket',
-            name='image',
-            field=models.ImageField(blank=True, help_text='Image maximum size is 800x800 pixels', null=True, upload_to='tickets/', verbose_name='Image'),
+            model_name="ticket",
+            name="image",
+            field=models.ImageField(
+                blank=True,
+                help_text="Image maximum size is 800x800 pixels",
+                null=True,
+                upload_to="tickets/",
+                verbose_name="Image",
+            ),
         ),
     ]
