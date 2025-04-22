@@ -81,3 +81,4 @@ celerybeat.pid
 local_settings.py
 
 docs/*
+flake8-report/*
